@@ -513,6 +513,15 @@ T.Pane {
                             .arg(root._formatRemaining(root._sleepRemaining))
             }
 
+            SectionHeader { text: qsTr("Up next") }
+
+            Widgets.CheckBoxExt {
+                Layout.fillWidth: true
+                text: qsTr("Play the next file of the folder automatically")
+                checked: FolderMedia.continueInFolder
+                onClicked: FolderMedia.continueInFolder = checked
+            }
+
             SectionHeader { text: qsTr("Display") }
 
             Widgets.CheckBoxExt {

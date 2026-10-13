@@ -79,6 +79,9 @@ FocusScope{
     signal requestLockUnlockAutoHide(bool lock)
     signal backRequested()
     signal pipRequested()
+    signal libraryPanelRequested()
+
+    property bool libraryPanelVisible: false
 
     ///incomming signal to request all menu and popup to close
     signal forceUnlock()
@@ -267,6 +270,7 @@ FocusScope{
             implicitHeight: VLCStyle.icon_banner + VLCStyle.margin_xxsmall * 2
             implicitWidth: (menuSelector.visible ? menuSelector.width + VLCStyle.margin_xxsmall : 0)
                            + backBtn.implicitWidth + logo.implicitWidth + VLCStyle.margin_xxsmall
+                           + libraryPanelButton.width + VLCStyle.margin_xxsmall
 
             // Single menu: the menu bar repeated the right click menu, so the player
             // only keeps one menu button, on the left where menus are expected.
@@ -347,6 +351,32 @@ FocusScope{
                 anchors.leftMargin: VLCStyle.margin_xxsmall
 
                 color: theme.accent
+            }
+
+            // the compact library: the other episodes, without leaving the video
+            Widgets.IconToolButton {
+                id: libraryPanelButton
+
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.left: logo.right
+                anchors.leftMargin: VLCStyle.margin_xxsmall
+
+                font.pixelSize: VLCStyle.icon_banner
+                width: VLCStyle.bannerButton_width
+                height: VLCStyle.bannerButton_height
+
+                text: VLCIcons.panel_left
+                description: qsTr("Episodes and library")
+                checked: root.libraryPanelVisible
+
+                AccessibleCompat.id: "topBarLibraryPanelButton"
+
+                Navigation.parentItem: root
+                Navigation.leftItem: backBtn
+
+                onClicked: root.libraryPanelRequested()
+
+                onHoveredChanged: root.requestLockUnlockAutoHide(hovered)
             }
         }
     }

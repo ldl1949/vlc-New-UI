@@ -291,6 +291,7 @@ libqt_plugin_la_SOURCES = \
 	player/delay_estimator.hpp \
 	player/player_controller.cpp player/player_controller.hpp player/player_controller_p.hpp \
 	player/subtitle_helper.cpp player/subtitle_helper.hpp \
+	player/folder_media.cpp player/folder_media.hpp \
 	player/player_controlbar_model.cpp player/player_controlbar_model.hpp \
 	player/control_list_model.cpp player/control_list_model.hpp \
 	player/control_list_filter.cpp \
@@ -494,6 +495,7 @@ nodist_libqt_plugin_la_SOURCES = \
 	player/input_models.moc.cpp \
 	player/player_controller.moc.cpp \
 	player/subtitle_helper.moc.cpp \
+	player/folder_media.moc.cpp \
 	player/player_controlbar_model.moc.cpp \
 	player/control_list_model.moc.cpp \
 	player/control_list_filter.moc.cpp \
@@ -1189,6 +1191,7 @@ libqml_module_player_a_QML = \
 	player/qml/TracksPageSubtitle.qml \
 	player/qml/TracksListPage.qml \
 	player/qml/PlayerSidebar.qml \
+	player/qml/EpisodesPanel.qml \
 	player/qml/AddSubtitlesDialog.qml \
 	player/qml/PlayerPresets.qml \
 	player/qml/SubtitleTimeline.qml \

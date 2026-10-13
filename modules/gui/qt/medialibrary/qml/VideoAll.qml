@@ -86,7 +86,10 @@ MainViewLoader {
 
     sortModel: [
         { text: qsTr("Alphabetic"), criteria: "title"    },
-        { text: qsTr("Duration"),   criteria: "duration" }
+        { text: qsTr("Duration"),   criteria: "duration" },
+        // ascending shows what was never played first, select again for watched first
+        { text: qsTr("Unwatched first"), criteria: "playcount" },
+        { text: qsTr("Date added"), criteria: "insertion" }
     ]
 
 

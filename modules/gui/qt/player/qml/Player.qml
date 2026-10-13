@@ -47,6 +47,9 @@ FocusScope {
 
     // player sidebar (subtitles, audio, video and playback settings)
     property bool sidebarVisible: false
+
+    // compact library on the left: the other episodes of the show
+    property bool libraryPanelVisible: false
     property int sidebarTab: PlayerSidebar.Tab.Subtitles
 
     // only reveal the top and bottom bars when the pointer gets near them
@@ -114,6 +117,10 @@ FocusScope {
 
     onSidebarVisibleChanged: {
         lockUnlockAutoHide(sidebarVisible)
+    }
+
+    onLibraryPanelVisibleChanged: {
+        lockUnlockAutoHide(libraryPanelVisible)
     }
 
     // Functions
@@ -1057,6 +1064,9 @@ FocusScope {
         // leaving the player view while a video plays keeps it in the picture-in-picture player
         onPipRequested: MainCtx.playerView = false
 
+        libraryPanelVisible: rootPlayer.libraryPanelVisible
+        onLibraryPanelRequested: rootPlayer.libraryPanelVisible = !rootPlayer.libraryPanelVisible
+
         FadeControllerStateGroup {
             target: topBar
         }
@@ -1317,6 +1327,37 @@ FocusScope {
 
     PlayerPresets {
         id: playerPresets
+    }
+
+    Loader {
+        id: libraryPanelLoader
+
+        anchors {
+            top: parent.top
+            bottom: parent.bottom
+            left: parent.left
+
+            topMargin: rootPlayer._controlsUnderVideo ? topBar.height : topBar.reservedHeight
+            bottomMargin: parent.height - rootPlayer.popupAnchorY
+            leftMargin: VLCStyle.applicationHorizontalMargin
+        }
+
+        active: rootPlayer.libraryPanelVisible
+        visible: active
+        focus: active
+
+        sourceComponent: EpisodesPanel {
+            colorContext.palette: windowTheme.palette
+
+            onCloseRequested: rootPlayer.libraryPanelVisible = false
+
+            onOpenLibraryRequested: {
+                rootPlayer.libraryPanelVisible = false
+                MainCtx.playerView = false
+            }
+
+            Keys.onEscapePressed: rootPlayer.libraryPanelVisible = false
+        }
     }
 
     Loader {

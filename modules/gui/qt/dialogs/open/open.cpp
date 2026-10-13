@@ -30,6 +30,7 @@
 #include "playlist/playlist_controller.hpp"
 
 #include <QRegularExpression>
+#include <QTabBar>
 #include <QMenu>
 
 #include <vlc_url.h>
@@ -228,6 +229,31 @@ void OpenDialog::showTab( OpenDialog::OpenTab i_tab, OpenDialog::ActionFlag i_ac
     setActionFlag(i_action);
     if( i_tab == OPEN_CAPTURE_TAB ) captureOpenPanel->initialize();
     ui.Tab->setCurrentIndex( i_tab );
+
+    /* Each menu entry opens a dialog of its own (open a file, a disc, a network
+     * stream, a capture device, convert, stream...) instead of an all-in-one
+     * "media factory": hide the tabs and name the window after the action. */
+    /* converting or streaming can start from any kind of source: keep the tabs */
+    ui.Tab->tabBar()->setVisible( i_action == OPEN_AND_STREAM || i_action == OPEN_AND_SAVE
+                                  || i_action == SELECT );
+    static const char *const tabTitles[OPEN_TAB_MAX] = {
+        N_("Open Files"), N_("Open Disc"), N_("Open Network Stream"), N_("Open Capture Device")
+    };
+    switch( i_action )
+    {
+        case OPEN_AND_STREAM:
+            setWindowTitle( qtr( "Stream to Another Device" ) );
+            break;
+        case OPEN_AND_SAVE:
+            setWindowTitle( qtr( "Convert" ) );
+            break;
+        case OPEN_AND_ENQUEUE:
+            setWindowTitle( qtr( "Add to the Play Queue" ) );
+            break;
+        default:
+            setWindowTitle( qtr( tabTitles[i_tab] ) );
+            break;
+    }
     show();
     if( ui.Tab->currentWidget() != NULL )
     {
