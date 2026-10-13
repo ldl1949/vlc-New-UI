@@ -1242,8 +1242,16 @@ ShowKey(intf_thread_t *intf, uint_fast32_t key)
     if (code >= KEY_MOUSEWHEELUP && code <= KEY_MOUSEWHEELRIGHT)
         return; /* the wheel would flood the video with messages */
 
-    char *name = vlc_keycode2str(key, true);
-    if (name == NULL)
+    char *key_name = vlc_keycode2str(key, true);
+    if (key_name == NULL)
+        return;
+
+    /* under the message describing the action, in the top right corner: the
+     * other corners are covered by the controls the key press reveals */
+    char *name;
+    int ret = asprintf(&name, "\n\n\n%s", key_name);
+    free(key_name);
+    if (ret < 0)
         return;
 
     vlc_player_t *player = vlc_playlist_GetPlayer(intf->p_sys->playlist);
@@ -1257,7 +1265,7 @@ ShowKey(intf_thread_t *intf, uint_fast32_t key)
         int64_t channel = var_GetInteger(vouts[i], "hotkeys-key-channel");
         if (channel > 0)
             vout_OSDText(vouts[i], channel,
-                         SUBPICTURE_ALIGN_BOTTOM | SUBPICTURE_ALIGN_RIGHT,
+                         SUBPICTURE_ALIGN_TOP | SUBPICTURE_ALIGN_RIGHT,
                          VLC_TICK_FROM_MS(1500), name);
         vout_Release(vouts[i]);
     }
