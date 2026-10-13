@@ -1249,7 +1249,8 @@ ShowKey(intf_thread_t *intf, uint_fast32_t key)
     /* under the message describing the action, in the top right corner: the
      * other corners are covered by the controls the key press reveals */
     char *name;
-    int ret = asprintf(&name, "\n\n\n%s", key_name);
+    /* empty lines are dropped by the renderer, keep them with a no-break space */
+    int ret = asprintf(&name, " \n \n \n%s", key_name);
     free(key_name);
     if (ret < 0)
         return;
