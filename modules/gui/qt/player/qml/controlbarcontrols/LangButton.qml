@@ -66,7 +66,7 @@ Widgets.IconToolButton {
             parent: root._parentItem
 
             x: 0
-            y: (parent.positionSliderY - height)
+            y: ((parent.popupAnchorY ?? parent.positionSliderY) - height)
             z: 1
 
             focus: true

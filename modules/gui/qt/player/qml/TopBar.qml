@@ -24,6 +24,7 @@ import QtQuick.Window
 
 import VLC.MainInterface
 import VLC.Style
+import VLC.Player
 import VLC.PlayerControls
 import VLC.Playlist
 import VLC.Widgets as Widgets
@@ -67,7 +68,8 @@ FocusScope{
 
     // Aliases
 
-    property alias resumeVisible: resumeDialog.visible
+    // The resume prompt now lives in the center of the player (see Player.qml)
+    property bool resumeVisible: false
 
     property alias playlistVisible: playlistButton.checked
 
@@ -76,6 +78,7 @@ FocusScope{
     signal togglePlaylistVisibility()
     signal requestLockUnlockAutoHide(bool lock)
     signal backRequested()
+    signal pipRequested()
 
     ///incomming signal to request all menu and popup to close
     signal forceUnlock()
@@ -243,18 +246,10 @@ FocusScope{
         anchors.top: root.top
         anchors.leftMargin:  root._sideMargin
 
-        implicitWidth: resumeVisible ? resumeDialog.implicitWidth
-                                     : logoGroup.implicitWidth
+        implicitWidth: logoGroup.implicitWidth
 
         implicitHeight: {
-            if (root.resumeVisible) {
-                // Only if there are multiple lines use `resumeDialog`'s implicit height, otherwise the video
-                // window may get resized by few pixels unnecessarily when `resumeDialog` is no longer visible.
-                if (resumeDialog.implicitHeight >= (logoGroup.implicitHeight + resumeDialog.baselineOffset))
-                    return resumeDialog.implicitHeight
-                else
-                    return logoGroup.implicitHeight
-            } else if (_showTopBar)
+            if (_showTopBar)
                 return logoGroup.implicitHeight
             else
                 return 0
@@ -267,16 +262,65 @@ FocusScope{
 
             anchors.fill: parent
 
-            visible: (root._showTopBar && root.resumeVisible === false)
+            visible: root._showTopBar
 
             implicitHeight: VLCStyle.icon_banner + VLCStyle.margin_xxsmall * 2
-            implicitWidth: backBtn.implicitWidth + logo.implicitWidth + VLCStyle.margin_xxsmall
+            implicitWidth: (menuSelector.visible ? menuSelector.width + VLCStyle.margin_xxsmall : 0)
+                           + backBtn.implicitWidth + logo.implicitWidth + VLCStyle.margin_xxsmall
+
+            // Single menu: the menu bar repeated the right click menu, so the player
+            // only keeps one menu button, on the left where menus are expected.
+            Widgets.IconToolButton {
+                id: menuSelector
+
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.left: parent.left
+
+                visible: !root.showToolbar
+                enabled: visible
+                font.pixelSize: VLCStyle.icon_banner
+
+                width: visible ? VLCStyle.bannerButton_width : 0
+                height: VLCStyle.bannerButton_height
+
+                text: VLCIcons.more
+                description: qsTr("Menu")
+
+                AccessibleCompat.id: "topBarMenuButton"
+
+                checked: contextMenu.shown
+
+                Navigation.parentItem: root
+                Navigation.rightItem: backBtn
+
+                onClicked: contextMenu.popup(this.mapToGlobal(0, height))
+
+                onHoveredChanged: root.requestLockUnlockAutoHide(hovered)
+
+                Menus.QmlGlobalMenu {
+                    id: contextMenu
+
+                    ctx: MainCtx
+
+                    onAboutToShow: root.requestLockUnlockAutoHide(true)
+                    onAboutToHide: root.requestLockUnlockAutoHide(false)
+                }
+
+                Connections {
+                    target: root
+
+                    function onForceUnlock() {
+                        contextMenu.close()
+                    }
+                }
+            }
 
             Widgets.IconToolButton {
                 id: backBtn
 
                 anchors.verticalCenter: parent.verticalCenter
-                anchors.left: parent.left
+                anchors.left: menuSelector.visible ? menuSelector.right : parent.left
+                anchors.leftMargin: menuSelector.visible ? VLCStyle.margin_xxsmall : 0
 
                 objectName: "IconToolButton"
                 font.pixelSize: VLCStyle.icon_banner
@@ -288,7 +332,8 @@ FocusScope{
                 focus: true
 
                 Navigation.parentItem: root
-                Navigation.rightItem: menuSelector
+                Navigation.leftItem: menuSelector.visible ? menuSelector : null
+                Navigation.rightItem: pipButton.visible ? pipButton : fullscreenButton
                 onClicked: root.backRequested()
 
                 onHoveredChanged: root.requestLockUnlockAutoHide(hovered)
@@ -302,32 +347,6 @@ FocusScope{
                 anchors.leftMargin: VLCStyle.margin_xxsmall
 
                 color: theme.accent
-            }
-        }
-
-        ResumeDialog {
-            id: resumeDialog
-
-            anchors.fill: parent
-            //add aditional margin so it align with menubar text when visible (see MenuBar.qml)
-            anchors.leftMargin: VLCStyle.margin_xsmall
-
-            maxWidth: ((root.showCSD && !root.pinControls) ? csdDecorations : playlistGroup).x
-                - VLCStyle.applicationHorizontalMargin
-                - VLCStyle.margin_large
-
-            colorContext.palette: theme.palette
-
-            Navigation.parentItem: rootPlayer
-
-            onHidden: {
-                if (activeFocus) {
-                    backBtn.forceActiveFocus()
-                }
-            }
-
-            onVisibleChanged: {
-                root.requestLockUnlockAutoHide(visible)
             }
         }
     }
@@ -392,10 +411,29 @@ FocusScope{
 
         text: root.title
         horizontalAlignment: Text.AlignLeft
-        color: theme.fg.primary
+        color: titleHover.hovered ? theme.accent : theme.fg.primary
         font.weight: Font.DemiBold
         font.pixelSize: VLCStyle.dp(18, VLCStyle.scale)
+        font.underline: titleHover.hovered
         elide: Text.ElideRight
+
+        // Clicking the title opens the library, where the rest of the show is
+        HoverHandler {
+            id: titleHover
+
+            cursorShape: Qt.PointingHandCursor
+            onHoveredChanged: root.requestLockUnlockAutoHide(hovered)
+        }
+
+        TapHandler {
+            onTapped: root.backRequested()
+        }
+
+        Widgets.ToolTipExt {
+            visible: titleHover.hovered
+            delay: VLCStyle.delayToolTipAppear
+            text: qsTr("Open in library")
+        }
     }
 
     Loader {
@@ -435,48 +473,81 @@ FocusScope{
         visible: root._showTopBar
 
         Widgets.IconToolButton {
-            id: menuSelector
+            id: pipButton
 
             anchors.verticalCenter: parent.verticalCenter
-            visible: !root.showToolbar
+
+            visible: MainCtx.hasEmbededVideo && MainCtx.canShowVideoPIP
             enabled: visible
-            focus: visible
+
+            width: VLCStyle.bannerButton_width
+            height: VLCStyle.bannerButton_height
+
+            description: qsTr("Picture in picture")
+
+            AccessibleCompat.id: "topBarPipButton"
+
+            // no glyph for it in the icon font: a frame with a small window in a corner
+            contentItem: Item {
+                Rectangle {
+                    anchors.centerIn: parent
+
+                    width: VLCStyle.dp(18, VLCStyle.scale)
+                    height: VLCStyle.dp(13, VLCStyle.scale)
+
+                    color: "transparent"
+                    border.color: pipButton.color
+                    border.width: VLCStyle.dp(1.5, VLCStyle.scale)
+                    radius: VLCStyle.dp(2, VLCStyle.scale)
+
+                    Rectangle {
+                        anchors.right: parent.right
+                        anchors.bottom: parent.bottom
+                        anchors.margins: VLCStyle.dp(3, VLCStyle.scale)
+
+                        width: parent.width * 0.45
+                        height: parent.height * 0.45
+                        radius: VLCStyle.dp(1, VLCStyle.scale)
+
+                        color: pipButton.color
+                    }
+                }
+            }
+
+            Navigation.parentItem: root
+            Navigation.leftItem: backBtn
+            Navigation.rightItem: fullscreenButton
+
+            onClicked: root.pipRequested()
+
+            onHoveredChanged: root.requestLockUnlockAutoHide(hovered)
+        }
+
+        Widgets.IconToolButton {
+            id: fullscreenButton
+
+            anchors.verticalCenter: parent.verticalCenter
+
+            visible: Player.hasVideoOutput
+            enabled: visible
+
             font.pixelSize: VLCStyle.icon_banner
 
             width: VLCStyle.bannerButton_width
             height: VLCStyle.bannerButton_height
 
-            text: VLCIcons.more
-            description: qsTr("Menu")
+            text: Player.fullscreen ? VLCIcons.defullscreen : VLCIcons.fullscreen
+            description: Player.fullscreen ? qsTr("Exit fullscreen") : qsTr("Fullscreen")
 
-            AccessibleCompat.id: "topBarMenuButton"
-
-            checked: contextMenu.shown
+            AccessibleCompat.id: "topBarFullscreenButton"
 
             Navigation.parentItem: root
-            Navigation.leftItem: backBtn
+            Navigation.leftItem: pipButton.visible ? pipButton : backBtn
             Navigation.rightItem: playlistButton
 
-            onClicked: contextMenu.popup(this.mapToGlobal(0, height))
+            onClicked: Player.fullscreen = !Player.fullscreen
 
             onHoveredChanged: root.requestLockUnlockAutoHide(hovered)
-
-            Menus.QmlGlobalMenu {
-                id: contextMenu
-
-                ctx: MainCtx
-
-                onAboutToShow: root.requestLockUnlockAutoHide(true)
-                onAboutToHide: root.requestLockUnlockAutoHide(false)
-            }
-
-            Connections {
-                target: root
-
-                function onForceUnlock() {
-                    contextMenu.close()
-                }
-            }
         }
 
         PlaylistPane.PlaylistToggleButton {
@@ -498,7 +569,7 @@ FocusScope{
             plListView: root.plListView
             
             Navigation.parentItem: root
-            Navigation.leftItem: menuSelector.visible ? menuSelector : backBtn
+            Navigation.leftItem: fullscreenButton.visible ? fullscreenButton : backBtn
 
             onClicked: togglePlaylistVisibility()
 

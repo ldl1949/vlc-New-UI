@@ -127,6 +127,60 @@ T.Pane {
 
             color: root.sliderColor
 
+            // The volume is drawn as a traffic cone lying on its side: segments growing
+            // taller from left to right, in VLC orange with the light cone stripes, and red
+            // when the volume goes above 100%.
+            background: Item {
+                x: volControl.leftPadding
+                y: volControl.topPadding
+
+                implicitWidth: VLCStyle.dp(100, VLCStyle.scale)
+                implicitHeight: VLCStyle.dp(22, VLCStyle.scale)
+
+                width: volControl.availableWidth
+                height: volControl.availableHeight
+
+                Row {
+                    id: coneRow
+
+                    readonly property int segments: 14
+                    readonly property real segmentWidth: (width - spacing * (segments - 1)) / segments
+
+                    anchors.fill: parent
+                    spacing: VLCStyle.dp(1, VLCStyle.scale)
+
+                    Repeater {
+                        model: coneRow.segments
+
+                        delegate: Rectangle {
+                            required property int index
+
+                            readonly property real segmentPos: (index + 1) / coneRow.segments
+                            readonly property bool filled: ((index + 0.5) / coneRow.segments) <= volControl.visualPosition
+                            readonly property bool overdrive: (segmentPos * root._maxvolpos) > 1.0
+                            // two light bands, like the reflective stripes of the cone
+                            readonly property bool stripe: (segmentPos > 0.35 && segmentPos <= 0.5)
+                                                           || (segmentPos > 0.7 && segmentPos <= 0.8)
+
+                            anchors.bottom: parent.bottom
+
+                            width: coneRow.segmentWidth
+                            height: Math.max(VLCStyle.dp(3, VLCStyle.scale), parent.height * (0.2 + 0.8 * segmentPos))
+                            radius: VLCStyle.dp(1, VLCStyle.scale)
+
+                            color: {
+                                const theme = volControl.colorContext
+                                if (!filled)
+                                    return theme.bg.primary
+                                if (overdrive)
+                                    return theme.fg.negative
+                                return stripe ? Qt.tint(theme.accent, Qt.rgba(1, 1, 1, 0.55)) : theme.accent
+                            }
+                        }
+                    }
+                }
+            }
+
             from: 0
             to: root._maxvolpos
             opacity: _player.muted ? 0.5 : 1

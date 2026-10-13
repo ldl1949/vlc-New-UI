@@ -1115,6 +1115,7 @@ libqml_module_medialibrary_a_QML = \
 	medialibrary/qml/MusicAlbumSectionDelegate.qml \
 	medialibrary/qml/MLGlobalShortcuts.qml \
 	medialibrary/qml/Bookmarks.qml \
+	medialibrary/qml/BookmarkList.qml \
 	medialibrary/qml/MLContextMenu.qml \
 	medialibrary/qml/MLDragItem.qml \
 	medialibrary/qml/MLTableColumns.qml \
@@ -1185,6 +1186,8 @@ libqml_module_player_a_QML = \
 	player/qml/TracksPageSpeed.qml \
 	player/qml/TracksPageSubtitle.qml \
 	player/qml/TracksListPage.qml \
+	player/qml/PlayerSidebar.qml \
+	player/qml/TracksPopup.qml \
 	player/qml/ControlLayout.qml \
 	player/qml/ControlRepeater.qml \
 	player/qml/NavigationBox.qml
@@ -1204,6 +1207,9 @@ libqml_module_playercontrols_a_QML = \
 	player/qml/controlbarcontrols/ArtworkInfoWidget.qml \
 	player/qml/controlbarcontrols/AspectRatioWidget.qml \
 	player/qml/controlbarcontrols/AtoBButton.qml \
+	player/qml/controlbarcontrols/AudioButton.qml \
+	player/qml/controlbarcontrols/SidebarButton.qml \
+	player/qml/controlbarcontrols/SubtitleButton.qml \
 	player/qml/controlbarcontrols/BackButton.qml \
 	player/qml/controlbarcontrols/BookmarkButton.qml \
 	player/qml/controlbarcontrols/ChapterNextButton.qml \

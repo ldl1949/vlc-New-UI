@@ -116,7 +116,7 @@ QtObject {
     readonly property int icon_tableHeader: icon_normal
     readonly property int icon_playlistHeader: icon_normal
     readonly property int icon_banner: MainCtx.dp(28, scale)
-    readonly property int icon_play: MainCtx.dp(28, scale)
+    readonly property int icon_play: MainCtx.dp(30, scale)
     readonly property int icon_addressBar: icon_normal
     readonly property int icon_actionButton: icon_normal
     readonly property int icon_PIP: icon_normal
@@ -175,7 +175,18 @@ QtObject {
     readonly property int button_width_normal: MainCtx.dp(96, scale)
     readonly property int button_width_large: MainCtx.dp(128, scale)
 
-    readonly property real button_radius: MainCtx.dp(4, scale)
+    // VLC keeps its rectangular identity, just a little less sharp:
+    readonly property real button_radius: MainCtx.dp(6, scale)
+    readonly property real popup_radius: MainCtx.dp(8, scale)
+
+    // player sidebar (subtitles, audio, video and playback settings)
+    readonly property int playerSidebar_width: MainCtx.dp(340, scale)
+
+    // thick seek bar sitting at the bottom of the player control bar
+    readonly property int seekBar_height: MainCtx.dp(8, scale)
+
+    // size of the area near the top and bottom edges of the video revealing the bars
+    readonly property int playerRevealZone: MainCtx.dp(120, scale)
 
     readonly property int contextButton_width: icon_normal
     readonly property int contextButton_margin: margin_xxsmall
@@ -324,7 +335,7 @@ QtObject {
     readonly property int controlBarBookmarksHeight: icon_xsmall * 0.9
 
     // Player control layout
-    readonly property int controlLayoutHeight: MainCtx.dp(64, scale)
+    readonly property int controlLayoutHeight: MainCtx.dp(52, scale)
     readonly property int controlLayoutHeightPinned: MainCtx.dp(32, scale)
 
     // Scroll bar (size means width or height, depending on the orientation):

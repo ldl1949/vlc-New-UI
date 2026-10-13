@@ -31,6 +31,7 @@
 #include <vlc_aout.h>           /* audio_output_t */
 #include <vlc_es.h>
 #include <vlc_cxx_helpers.hpp>
+#include <algorithm>
 #include <vlc_vout.h>
 #include <vlc_preparser.h>
 
@@ -1545,6 +1546,26 @@ void PlayerController::setSubtitleFPS(float fps)
     if( !d->isCurrentItemSynced() )
         return;
     vlc_player_SetAssociatedSubsFPS( d->m_player, fps );
+}
+
+int PlayerController::getSubtitleTextScale() const
+{
+    Q_D(const PlayerController);
+    vlc_player_locker lock{ d->m_player };
+    return vlc_player_GetSubtitleTextScale( d->m_player );
+}
+
+void PlayerController::setSubtitleTextScale(int scale)
+{
+    Q_D(PlayerController);
+    scale = std::clamp( scale, 10, 500 );
+    {
+        vlc_player_locker lock{ d->m_player };
+        if( (int)vlc_player_GetSubtitleTextScale( d->m_player ) == scale )
+            return;
+        vlc_player_SetSubtitleTextScale( d->m_player, scale );
+    }
+    emit subtitleTextScaleChanged( scale );
 }
 
 //TITLE/CHAPTER/MENU

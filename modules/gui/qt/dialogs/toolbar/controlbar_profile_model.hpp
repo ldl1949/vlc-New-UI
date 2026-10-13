@@ -47,6 +47,7 @@ public:
     enum class Style
     {
         EMPTY_STYLE,
+        REDESIGN_STYLE,
         DEFAULT_STYLE,
         MINIMALIST_STYLE,
         ONE_LINER_STYLE,

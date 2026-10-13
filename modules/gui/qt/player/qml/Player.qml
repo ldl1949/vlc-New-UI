@@ -38,7 +38,19 @@ FocusScope {
     //behave like a Page
     property var pagePrefix: []
 
-    readonly property int positionSliderY: controlBar.y + controlBar.sliderY
+    // The seek bar is now at the very bottom of the control bar, so panels and
+    // popups stop at the top of the control bar instead of at the seek bar.
+    readonly property int positionSliderY: controlBar.y
+
+    // where popups opened from the control bar should end
+    readonly property real popupAnchorY: controlBar.y
+
+    // player sidebar (subtitles, audio, video and playback settings)
+    property bool sidebarVisible: false
+    property int sidebarTab: PlayerSidebar.Tab.Subtitles
+
+    // only reveal the top and bottom bars when the pointer gets near them
+    property bool revealBarsNearEdgesOnly: true
 
     readonly property string coverSource: {
         if (Player.artwork &&
@@ -100,7 +112,34 @@ FocusScope {
         lockUnlockAutoHide(_controlsUnderVideo)
     }
 
+    onSidebarVisibleChanged: {
+        lockUnlockAutoHide(sidebarVisible)
+    }
+
     // Functions
+
+    function openSidebar(tab) {
+        sidebarTab = tab
+        sidebarVisible = true
+    }
+
+    // y is in rootPlayer coordinates
+    function _onVideoPointerMoved(y) {
+        cursorAutoHideTimer.restart()
+
+        if (!revealBarsNearEdgesOnly || _controlsUnderVideo) {
+            playerToolbarVisibilityFSM.mouseMove()
+            return
+        }
+
+        const topZone = Math.max(VLCStyle.playerRevealZone, topBar.implicitHeight + VLCStyle.margin_normal)
+        const bottomZone = Math.max(VLCStyle.playerRevealZone, controlBar.implicitHeight + VLCStyle.margin_normal)
+
+        if (y < topZone || y > (height - bottomZone))
+            playerToolbarVisibilityFSM.mouseMove()
+        else
+            playerToolbarVisibilityFSM.hideNow()
+    }
 
     function lockUnlockAutoHide(lock) {
         if (lock) {
@@ -283,8 +322,19 @@ FocusScope {
                             playerToolbarVisibilityFSM.mouseMove();
                     }
 
+                    function onMouseMove(x, y) {
+                        if (Player.isInteractive) {
+                            interactiveAutoHideTimer.restart()
+                            return
+                        }
+
+                        // coordinates are given in physical pixels
+                        const dpr = MainCtx.effectiveDevicePixelRatio(Window.window)
+                        rootPlayer._onVideoPointerMoved(videoSurface.mapToItem(rootPlayer, x / dpr, y / dpr).y)
+                    }
+
                     Component.onCompleted: {
-                        mouseMoved.connect(videoSurface.onMouseEvent)
+                        mouseMoved.connect(videoSurface.onMouseMove)
                         mousePressed.connect(videoSurface.onMouseEvent)
                         mouseReleased.connect(videoSurface.onMouseEvent)
                         mouseDblClicked.connect(videoSurface.onMouseEvent)
@@ -293,6 +343,7 @@ FocusScope {
                     Binding on cursorShape {
                         when: playerToolbarVisibilityFSM.started
                             && !playerToolbarVisibilityFSM.isVisible
+                            && !cursorAutoHideTimer.running
                             && !interactiveAutoHideTimer.running
                         value: Qt.BlankCursor
                     }
@@ -945,13 +996,8 @@ FocusScope {
                  ? rootPlayer.width - playlistpopup.width
                  : rootPlayer.width
 
-        // NOTE: With pinned controls, the top controls are hidden when switching to
-        //       fullScreen. Except when resume is visible
-        visible: (MainCtx.pinVideoControls === false
-                  ||
-                  MainCtx.intfMainWindow.visibility !== Window.FullScreen
-                  ||
-                  resumeVisible)
+        // NOTE: The top bar is kept in fullscreen too (revealed when hovering near
+        //       the top), so the title stays reachable without leaving fullscreen.
 
         focus: true
         title: Player.title
@@ -959,7 +1005,8 @@ FocusScope {
         pinControls: MainCtx.pinVideoControls
 
         showCSD: MainCtx.clientSideDecoration && (MainCtx.intfMainWindow.visibility !== Window.FullScreen)
-        showToolbar: MainCtx.hasToolbarMenu && (MainCtx.intfMainWindow.visibility !== Window.FullScreen)
+        // the menu bar duplicated the right click menu: a single menu button is used instead
+        showToolbar: false
         playlistVisible: playlistVisibility.isPlaylistVisible
 
         plListView: {
@@ -1000,6 +1047,9 @@ FocusScope {
             }
             MainCtx.playerView = false
         }
+
+        // leaving the player view while a video plays keeps it in the picture-in-picture player
+        onPipRequested: MainCtx.playerView = false
 
         FadeControllerStateGroup {
             target: topBar
@@ -1185,6 +1235,83 @@ FocusScope {
         }
     }
 
+    Loader {
+        id: sidebarLoader
+
+        anchors {
+            top: parent.top
+            bottom: parent.bottom
+            right: playlistpopup.visible ? playlistpopup.left : parent.right
+
+            topMargin: rootPlayer._controlsUnderVideo ? topBar.height : topBar.reservedHeight
+            bottomMargin: parent.height - rootPlayer.popupAnchorY
+            rightMargin: playlistpopup.visible ? 0 : VLCStyle.applicationHorizontalMargin
+        }
+
+        active: rootPlayer.sidebarVisible
+        visible: active
+
+        focus: active
+
+        sourceComponent: PlayerSidebar {
+            colorContext.palette: windowTheme.palette
+
+            currentTab: rootPlayer.sidebarTab
+            onCurrentTabChanged: rootPlayer.sidebarTab = currentTab
+
+            onCloseRequested: rootPlayer.sidebarVisible = false
+
+            Keys.onEscapePressed: rootPlayer.sidebarVisible = false
+        }
+    }
+
+    // "Continue where you left off": shown near the playback controls, in the
+    // center, so it is noticed within the few seconds it is displayed.
+    Rectangle {
+        id: resumeCard
+
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: controlBar.top
+        anchors.bottomMargin: VLCStyle.margin_large
+
+        z: 2
+
+        visible: resumeDialog.visible
+
+        width: resumeDialog.width + VLCStyle.margin_normal * 2
+        height: resumeDialog.implicitHeight + VLCStyle.margin_normal * 2
+
+        radius: VLCStyle.popup_radius
+        color: windowTheme.bg.primary.alpha(0.92)
+        border.color: windowTheme.border
+        border.width: VLCStyle.border
+    }
+
+    ResumeDialog {
+        id: resumeDialog
+
+        z: 3
+
+        anchors.centerIn: resumeCard
+
+        width: maxWidth
+        maxWidth: Math.min(rootPlayer.width - VLCStyle.margin_xlarge * 2, VLCStyle.dp(600, VLCStyle.scale))
+
+        colorContext.palette: windowTheme.palette
+
+        Navigation.parentItem: rootPlayer
+
+        onVisibleChanged: rootPlayer.lockUnlockAutoHide(visible)
+    }
+
+    Timer {
+        // keeps the cursor visible while it moves over the middle of the video
+        id: cursorAutoHideTimer
+
+        interval: MainCtx.mouseHideTimeout
+        repeat: false
+    }
+
     Dialogs {
         z: 10
         bgContent: rootPlayer
@@ -1296,9 +1423,7 @@ FocusScope {
         leftPadding: VLCStyle.applicationHorizontalMargin
         bottomPadding: VLCStyle.applicationVerticalMargin + VLCStyle.margin_xsmall
 
-        textPosition: (MainCtx.pinVideoControls)
-                      ? ControlBar.TimeTextPosition.LeftRightSlider
-                      : ControlBar.TimeTextPosition.AboveSlider
+        textPosition: ControlBar.TimeTextPosition.LeftRightSlider
 
         // hide right text so that it won't overlap with play queue
         showRemainingTime: (textPosition !== ControlBar.TimeTextPosition.AboveSlider)

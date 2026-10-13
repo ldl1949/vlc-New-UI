@@ -46,7 +46,8 @@ FocusScope {
     property alias pagePrefix: stackView.pagePrefix
 
     readonly property int positionSliderY: {
-        var size = miniPlayer.y + miniPlayer.sliderY
+        // the seek bar is at the bottom of the bar now, popups open above the whole bar
+        var size = miniPlayer.y
 
         if (MainCtx.pinVideoControls)
             return size - VLCStyle.margin_xxxsmall

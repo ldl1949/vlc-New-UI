@@ -48,6 +48,8 @@ FSM {
     //incoming signals
     signal askShow()
     signal mouseMove()
+    // the pointer moved away from the top and bottom edges of the video
+    signal hideNow()
     signal keyboardMove()
     signal lock()
     signal unlock()
@@ -67,6 +69,7 @@ FSM {
     signalMap: ({
         askShow: fsm.askShow,
         mouseMove: fsm.mouseMove,
+        hideNow: fsm.hideNow,
         keyboardMove: fsm.keyboardMove,
         lock: fsm.lock,
         timeout: fsm.timeout,
@@ -122,6 +125,10 @@ FSM {
                         target: fsmAudioMode
                     },
                     askShow: {
+                        target: fsmHidden,
+                    },
+                    hideNow: {
+                        guard: () => !Player.isInteractive,
                         target: fsmHidden,
                     },
                     timeout: {

@@ -94,6 +94,82 @@ decltype (ControlbarProfileModel::m_defaults)
                 }
             },
             {
+                // Redesign: a thin single row that keeps the play button on the left
+                // (with previous/next around it) and groups tracks, queue and window
+                // controls on the right. The seek bar sits underneath the row.
+                Style::REDESIGN_STYLE,
+                N_("Redesign Style"),
+                {
+                    {
+                        PlayerControlbarModel::Videoplayer,
+                        {
+                            {
+                                {
+                                    ControlListModel::PREVIOUS_BUTTON,
+                                    ControlListModel::PLAY_BUTTON,
+                                    ControlListModel::NEXT_BUTTON,
+                                    ControlListModel::WIDGET_SPACER,
+                                    ControlListModel::VOLUME
+                                },
+                                {
+
+                                },
+                                {
+                                    ControlListModel::SUBTITLE_BUTTON,
+                                    ControlListModel::AUDIO_BUTTON,
+                                    ControlListModel::PLAYLIST_BUTTON,
+                                    ControlListModel::SIDEBAR_BUTTON,
+                                    ControlListModel::FULLSCREEN_BUTTON
+                                }
+                            }
+                        }
+                    },
+                    {
+                        PlayerControlbarModel::Audioplayer,
+                        {
+                            {
+                                {
+                                    ControlListModel::PREVIOUS_BUTTON,
+                                    ControlListModel::PLAY_BUTTON,
+                                    ControlListModel::NEXT_BUTTON,
+                                    ControlListModel::WIDGET_SPACER,
+                                    ControlListModel::VOLUME
+                                },
+                                {
+
+                                },
+                                {
+                                    ControlListModel::RANDOM_BUTTON,
+                                    ControlListModel::LOOP_BUTTON,
+                                    ControlListModel::AUDIO_BUTTON,
+                                    ControlListModel::PLAYLIST_BUTTON,
+                                    ControlListModel::SIDEBAR_BUTTON
+                                }
+                            }
+                        }
+                    },
+                    {
+                        PlayerControlbarModel::Miniplayer,
+                        {
+                            {
+                                {
+                                    ControlListModel::ARTWORK_INFO
+                                },
+                                {
+                                    ControlListModel::PREVIOUS_BUTTON,
+                                    ControlListModel::PLAY_BUTTON,
+                                    ControlListModel::NEXT_BUTTON
+                                },
+                                {
+                                    ControlListModel::VOLUME,
+                                    ControlListModel::PLAYER_SWITCH_BUTTON
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            {
                 Style::DEFAULT_STYLE,
                 N_("Default Style"),
                 {
