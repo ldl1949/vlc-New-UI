@@ -1248,10 +1248,11 @@ FocusScope {
             rightMargin: playlistpopup.visible ? 0 : VLCStyle.applicationHorizontalMargin
         }
 
-        active: rootPlayer.sidebarVisible
-        visible: active
+        // once created, the sidebar is kept so that its sleep timer keeps running when closed
+        active: rootPlayer.sidebarVisible || (status === Loader.Ready)
+        visible: rootPlayer.sidebarVisible
 
-        focus: active
+        focus: visible
 
         sourceComponent: PlayerSidebar {
             colorContext.palette: windowTheme.palette
