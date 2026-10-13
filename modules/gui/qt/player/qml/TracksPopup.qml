@@ -293,6 +293,7 @@ T.Popup {
         }
 
         background: Widgets.AnimatedBackground {
+            border.color: "transparent"
             enabled: actionTheme.initialized
             color: actionTheme.bg.primary
             radius: VLCStyle.button_radius

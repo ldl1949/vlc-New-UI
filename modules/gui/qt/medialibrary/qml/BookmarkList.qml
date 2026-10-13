@@ -82,6 +82,7 @@ ColumnLayout {
             }
 
             background: Widgets.AnimatedBackground {
+                border.color: "transparent"
                 enabled: rowTheme.initialized
                 color: rowTheme.bg.primary
                 radius: VLCStyle.button_radius

@@ -98,6 +98,8 @@ FocusScope {
 
         ColumnLayout {
             Layout.preferredWidth: VLCStyle.dp(240, VLCStyle.scale)
+            Layout.maximumWidth: VLCStyle.dp(240, VLCStyle.scale)
+            Layout.fillWidth: false
             Layout.fillHeight: true
             Layout.bottomMargin: VLCStyle.margin_normal
             spacing: VLCStyle.margin_xsmall
@@ -155,6 +157,7 @@ FocusScope {
                     }
 
                     background: Widgets.AnimatedBackground {
+                        border.color: "transparent"
                         enabled: categoryTheme.initialized
                         color: categoryDelegate.current ? categoryTheme.bg.highlight : categoryTheme.bg.primary
                         radius: VLCStyle.button_radius

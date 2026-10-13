@@ -137,6 +137,7 @@ T.Pane {
                 }
 
                 background: Widgets.AnimatedBackground {
+                    border.color: "transparent"
                     enabled: rowTheme.initialized
                     color: row.modelData.current ? rowTheme.bg.highlight : rowTheme.bg.primary
                     radius: VLCStyle.button_radius
