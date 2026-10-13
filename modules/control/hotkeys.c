@@ -63,8 +63,9 @@ struct intf_sys_t
     } subsync;
     enum vlc_vout_order spu_channel_order;
 
-    /* when the last action was handled, to know if a key press triggered one */
-    _Atomic vlc_tick_t last_action;
+    /* the last key pressed and when, to show which key triggered an action */
+    _Atomic uint_fast32_t last_key;
+    _Atomic vlc_tick_t last_key_time;
 
     vlc_executor_t *executor;
 };
@@ -1229,44 +1230,21 @@ player_on_vout_changed(vlc_player_t *player,
     }
 }
 
-static int
-ActionCallback(vlc_object_t *obj, char const *var,
-               vlc_value_t ov, vlc_value_t newval, void *data)
-{
-    VLC_UNUSED(obj); VLC_UNUSED(var); VLC_UNUSED(ov);
-    intf_thread_t *intf = data;
-    handle_action(intf, newval.i_int);
-    atomic_store(&intf->p_sys->last_action, vlc_tick_now());
-    return VLC_SUCCESS;
-}
-
 /* Shows the key that triggered an action in a corner of the video, so that an
- * accidental key press can be understood (and undone).
- * The core maps "key-pressed" to "key-action" in a callback registered before
- * this one, so the action, if any, has already been handled here. */
-static int
-KeyPressedCallback(vlc_object_t *obj, char const *var,
-                   vlc_value_t ov, vlc_value_t newval, void *data)
+ * accidental key press can be understood (and undone). */
+static void
+ShowKey(intf_thread_t *intf, uint_fast32_t key)
 {
-    VLC_UNUSED(obj); VLC_UNUSED(var); VLC_UNUSED(ov);
-    intf_thread_t *intf = data;
-
-    const vlc_tick_t last_action = atomic_exchange(&intf->p_sys->last_action, VLC_TICK_INVALID);
-    if (last_action == VLC_TICK_INVALID
-     || vlc_tick_now() - last_action > VLC_TICK_FROM_MS(200))
-        return VLC_SUCCESS; /* the key is not bound to anything */
-
     if (!var_InheritBool(intf, "hotkeys-osd-key"))
-        return VLC_SUCCESS;
+        return;
 
-    const uint_fast32_t key = newval.i_int;
     const uint_fast32_t code = key & ~KEY_MODIFIER;
     if (code >= KEY_MOUSEWHEELUP && code <= KEY_MOUSEWHEELRIGHT)
-        return VLC_SUCCESS; /* the wheel would flood the video with messages */
+        return; /* the wheel would flood the video with messages */
 
     char *name = vlc_keycode2str(key, true);
     if (name == NULL)
-        return VLC_SUCCESS;
+        return;
 
     vlc_player_t *player = vlc_playlist_GetPlayer(intf->p_sys->playlist);
     vlc_player_Lock(player);
@@ -1285,6 +1263,39 @@ KeyPressedCallback(vlc_object_t *obj, char const *var,
     }
     free(vouts);
     free(name);
+}
+
+static int
+ActionCallback(vlc_object_t *obj, char const *var,
+               vlc_value_t ov, vlc_value_t newval, void *data)
+{
+    VLC_UNUSED(obj); VLC_UNUSED(var); VLC_UNUSED(ov);
+    intf_thread_t *intf = data;
+    intf_sys_t *sys = intf->p_sys;
+
+    handle_action(intf, newval.i_int);
+
+    /* "key-action" is triggered by the core right after "key-pressed": only
+     * show the key when it was just pressed, actions also come from menus. */
+    const vlc_tick_t key_time = atomic_exchange(&sys->last_key_time, VLC_TICK_INVALID);
+    if (key_time != VLC_TICK_INVALID
+     && vlc_tick_now() - key_time < VLC_TICK_FROM_MS(200))
+        ShowKey(intf, atomic_load(&sys->last_key));
+
+    return VLC_SUCCESS;
+}
+
+/* Callbacks are called newest first: this one runs before the core turns the
+ * key into an action, remember it for ActionCallback. */
+static int
+KeyPressedCallback(vlc_object_t *obj, char const *var,
+                   vlc_value_t ov, vlc_value_t newval, void *data)
+{
+    VLC_UNUSED(obj); VLC_UNUSED(var); VLC_UNUSED(ov);
+    intf_sys_t *sys = ((intf_thread_t *)data)->p_sys;
+
+    atomic_store(&sys->last_key, (uint_fast32_t)newval.i_int);
+    atomic_store(&sys->last_key_time, vlc_tick_now());
     return VLC_SUCCESS;
 }
 
@@ -1318,7 +1329,8 @@ Open(vlc_object_t *this)
         return VLC_EGENERIC;
     }
     var_AddCallback(vlc_object_instance(intf), "key-action", ActionCallback, intf);
-    atomic_init(&sys->last_action, VLC_TICK_INVALID);
+    atomic_init(&sys->last_key, 0);
+    atomic_init(&sys->last_key_time, VLC_TICK_INVALID);
     var_AddCallback(vlc_object_instance(intf), "key-pressed", KeyPressedCallback, intf);
 
     sys->executor = NULL;
