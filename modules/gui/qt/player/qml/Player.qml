@@ -1337,7 +1337,7 @@ FocusScope {
             bottom: parent.bottom
             left: parent.left
 
-            topMargin: rootPlayer._controlsUnderVideo ? topBar.height : topBar.reservedHeight
+            topMargin: rootPlayer._controlsUnderVideo ? topBar.height : topBar.contentBottom
             bottomMargin: parent.height - rootPlayer.popupAnchorY
             leftMargin: VLCStyle.applicationHorizontalMargin
         }

@@ -44,6 +44,10 @@ FocusScope{
 
     property int reservedHeight: 0
 
+    // bottom of everything drawn by the top bar, the title goes below the reserved height
+    readonly property real contentBottom: leftTitleText.visible ? (leftTitleText.y + leftTitleText.height)
+                                                                : reservedHeight
+
     property int topMargin: 0
     property int sideMargin: 0
 
