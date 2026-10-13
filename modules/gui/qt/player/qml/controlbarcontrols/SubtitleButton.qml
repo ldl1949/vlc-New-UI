@@ -69,8 +69,8 @@ Widgets.IconToolButton {
     // Functions
 
     function forceUnlock() {
-        if (menuLoader.item)
-            menuLoader.item.close()
+        // can be called while the control bar tears the button down
+        menuLoader?.item?.close()
     }
 
     // Children
@@ -87,13 +87,14 @@ Widgets.IconToolButton {
 
             colorContext.palette: root.colorContext.palette
 
+            // bound, the height is only known once the popup content is laid out
+            y: (parent.popupAnchorY ?? parent.positionSliderY) - height - VLCStyle.margin_xsmall
+
             onAboutToShow: {
-                const anchorY = parent.popupAnchorY ?? parent.positionSliderY
                 const buttonRight = root.mapToItem(parent, root.width, 0).x
 
                 x = Helpers.clamp(buttonRight - width, VLCStyle.margin_small,
                                   parent.width - width - VLCStyle.margin_small)
-                y = anchorY - height - VLCStyle.margin_xsmall
             }
 
             onOpened: {

@@ -1000,7 +1000,8 @@ FocusScope {
         //       the top), so the title stays reachable without leaving fullscreen.
 
         focus: true
-        title: Player.title
+        // files without a title tag still show their name
+        title: Player.title || Player.name
 
         pinControls: MainCtx.pinVideoControls
 

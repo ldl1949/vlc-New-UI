@@ -483,6 +483,9 @@ FocusScope{
             width: VLCStyle.bannerButton_width
             height: VLCStyle.bannerButton_height
 
+            // the glyph is drawn by contentItem, this only keeps IconToolButton happy
+            text: VLCIcons.window_restore
+
             description: qsTr("Picture in picture")
 
             AccessibleCompat.id: "topBarPipButton"

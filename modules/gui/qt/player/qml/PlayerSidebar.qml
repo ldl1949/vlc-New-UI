@@ -749,6 +749,8 @@ T.Pane {
 
         function _request(v) {
             v = Helpers.clamp(Math.round(v / stepSize) * stepSize, from, to)
+            // update right away so that quick repeated steps accumulate
+            slider.value = v
             requestValue(v)
         }
 
@@ -783,7 +785,7 @@ T.Pane {
                 visible: valueSlider.showStepButtons
                 text: VLCIcons.remove
                 description: qsTr("Decrease")
-                onClicked: valueSlider._request(valueSlider.value - valueSlider.stepSize)
+                onClicked: valueSlider._request(slider.value - valueSlider.stepSize)
             }
 
             Widgets.SliderExt {
@@ -814,7 +816,7 @@ T.Pane {
                 visible: valueSlider.showStepButtons
                 text: VLCIcons.add
                 description: qsTr("Increase")
-                onClicked: valueSlider._request(valueSlider.value + valueSlider.stepSize)
+                onClicked: valueSlider._request(slider.value + valueSlider.stepSize)
             }
         }
     }
