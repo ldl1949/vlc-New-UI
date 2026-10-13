@@ -190,8 +190,38 @@ SubtitleHelper::SubtitleHelper(qt_intf_t *intf, QObject *parent)
     connect(player, &PlayerController::inputChanged, this, &SubtitleHelper::onInputChanged);
 
     // a subtitle file added while playing (or auto-detected) shows up as a new track
-    connect(player->getSubtitleTracks(), &TrackListModel::countChanged,
+    TrackListModel *subtitleTracks = player->getSubtitleTracks();
+    connect(subtitleTracks, &TrackListModel::countChanged,
+            this, &SubtitleHelper::onSubtitleTracksChanged);
+    // the timeline follows the selected track
+    connect(subtitleTracks, &TrackListModel::dataChanged,
             this, &SubtitleHelper::refreshCues);
+}
+
+void SubtitleHelper::addSubtitle(const QString &url)
+{
+    m_selectNextSubtitleTrack = true;
+    m_intf->p_mainPlayerController->AddAssociatedMedia(SPU_ES, url, true, false, false);
+}
+
+void SubtitleHelper::onSubtitleTracksChanged()
+{
+    if (m_selectNextSubtitleTrack)
+    {
+        // the player keeps its automatic choice, select the file the user asked for
+        vlc_player_t *player = m_intf->p_mainPlayerController->getPlayer();
+        vlc_player_locker lock{ player };
+        const size_t count = vlc_player_GetTrackCount(player, SPU_ES);
+        if (count > 0)
+        {
+            const vlc_player_track *track = vlc_player_GetTrackAt(player, SPU_ES, count - 1);
+            if (track)
+                vlc_player_SelectTrack(player, track, VLC_PLAYER_SELECT_EXCLUSIVE);
+        }
+        m_selectNextSubtitleTrack = false;
+    }
+
+    refreshCues();
 }
 
 QString SubtitleHelper::subtitleLanguage() const
@@ -367,7 +397,7 @@ void SubtitleHelper::applyMatches(const QVariantList &matches)
             mainCtx->setSettingValue(settingsKey(mediaUrl), subtitleUrl.isEmpty() ? QVariant{} : QVariant{subtitleUrl});
 
         if (mediaUrl == current && !subtitleUrl.isEmpty())
-            player->AddAssociatedMedia(SPU_ES, subtitleUrl, true, true, false);
+            addSubtitle(subtitleUrl);
     }
 }
 
@@ -395,7 +425,7 @@ void SubtitleHelper::onInputChanged(bool hasInput)
     {
         const QUrl url(remembered);
         if (!url.isLocalFile() || QFileInfo::exists(url.toLocalFile()))
-            player->AddAssociatedMedia(SPU_ES, remembered, true, false, false);
+            addSubtitle(remembered);
     }
 
     // slaves are attached once the input is started
@@ -406,21 +436,36 @@ void SubtitleHelper::refreshCues()
 {
     QUrl subtitle;
 
+    // Subtitle files come after the tracks of the media itself, in the order they
+    // were added: the selected track gives the file being shown, if any.
+    QList<QUrl> files;
     if (input_item_t *item = m_intf->p_mainPlayerController->getInput())
     {
         input_item_Hold(item);
         vlc_mutex_lock(&item->lock);
-        // the last one is the most recently added
-        for (int i = item->i_slaves - 1; i >= 0; --i)
-        {
+        for (int i = 0; i < item->i_slaves; ++i)
             if (item->pp_slaves[i]->i_type == SLAVE_TYPE_SPU)
-            {
-                subtitle = QUrl(qfu(item->pp_slaves[i]->psz_uri));
-                break;
-            }
-        }
+                files << QUrl(qfu(item->pp_slaves[i]->psz_uri));
         vlc_mutex_unlock(&item->lock);
         input_item_Release(item);
+    }
+
+    if (!files.isEmpty())
+    {
+        vlc_player_t *player = m_intf->p_mainPlayerController->getPlayer();
+        vlc_player_locker lock{ player };
+        const size_t count = vlc_player_GetTrackCount(player, SPU_ES);
+        const qsizetype firstFileTrack = static_cast<qsizetype>(count) - files.size();
+        for (size_t i = 0; i < count; ++i)
+        {
+            const vlc_player_track *track = vlc_player_GetTrackAt(player, SPU_ES, i);
+            if (!track || !track->selected)
+                continue;
+            const qsizetype file = static_cast<qsizetype>(i) - firstFileTrack;
+            if (file >= 0 && file < files.size())
+                subtitle = files[file];
+            break;
+        }
     }
 
     if (subtitle == m_subtitleFile && !m_cues.isEmpty())

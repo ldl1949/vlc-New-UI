@@ -91,6 +91,8 @@ signals:
 
 private:
     void onInputChanged(bool hasInput);
+    void onSubtitleTracksChanged();
+    void addSubtitle(const QString &url);
 
     QString rememberedSubtitle(const QUrl &media) const;
     void setLanguage(const char *option, int category, const QString &language);
@@ -101,6 +103,9 @@ private:
 
     QUrl m_subtitleFile;
     QVariantList m_cues;
+
+    // a subtitle file was added by the user: select its track once it exists
+    bool m_selectNextSubtitleTrack = false;
 };
 
 #endif // SUBTITLE_HELPER_HPP
