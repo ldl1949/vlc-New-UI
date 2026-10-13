@@ -42,6 +42,9 @@ T.Popup {
     // Emitted when the user wants the detailed settings, the argument is a PlayerSidebar.Tab
     signal requestSidebar(int tab)
 
+    // Emitted when the user wants to add subtitle files
+    signal requestAddSubtitles()
+
     width: VLCStyle.dp(320, VLCStyle.scale)
     height: Math.min(implicitHeight, VLCStyle.dp(420, VLCStyle.scale))
 
@@ -120,8 +123,8 @@ T.Popup {
 
                 ActionRow {
                     visible: root.currentTab === TracksPopup.Tab.Subtitles
-                    text: qsTr("Add subtitle file...")
-                    onClicked: { root.close(); DialogsProvider.loadSubtitlesFile() }
+                    text: qsTr("Add subtitles...")
+                    onClicked: { root.close(); root.requestAddSubtitles() }
                 }
 
                 ActionRow {

@@ -20,9 +20,19 @@ import QtQuick
 import VLC.MediaLibrary
 import VLC.Dialogs
 import VLC.Menus
+import VLC.Player
 
 Item {
-    ShortcutExt{ sequence:"Ctrl+B"; onActivated: DialogsProvider.bookmarksDialog() }
+    // Ctrl+B adds a bookmark right away, the list is one more modifier away
+    ShortcutExt{ sequence:"Ctrl+B"; onActivated: if (Player.isStarted) quickBookmarks.add() }
+    ShortcutExt{ sequence:"Ctrl+Shift+B"; onActivated: DialogsProvider.bookmarksDialog() }
+
+    MLBookmarkModel {
+        id: quickBookmarks
+
+        player: Player
+        ml: MediaLib
+    }
 
     MLRecentMediaModel {
         id: recentModel

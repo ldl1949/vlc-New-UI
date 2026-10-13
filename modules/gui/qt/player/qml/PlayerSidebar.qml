@@ -47,7 +47,11 @@ T.Pane {
     property real _sleepDeadline: 0
     property real _sleepRemaining: 0
 
+    // PlayerPresets of the player, optional
+    property var presets: null
+
     signal closeRequested()
+    signal addSubtitlesRequested()
 
     implicitWidth: VLCStyle.playerSidebar_width
 
@@ -84,6 +88,17 @@ T.Pane {
         const minutes = Math.floor(total / 60)
         const seconds = total % 60
         return minutes + ":" + (seconds < 10 ? "0" : "") + seconds
+    }
+
+    // distinct languages of a TrackListModel, "language" is Qt.UserRole + 1
+    function _languagesOf(model, count) {
+        const languages = []
+        for (let i = 0; i < count; ++i) {
+            const language = model.data(model.index(i, 0), Qt.UserRole + 1)
+            if (language && !languages.includes(language))
+                languages.push(language)
+        }
+        return languages
     }
 
     function _formatDelay(ms) {
@@ -137,6 +152,11 @@ T.Pane {
                 description: qsTr("Close")
                 onClicked: root.closeRequested()
             }
+        }
+
+        PresetBar {
+            Layout.fillWidth: true
+            visible: root.presets !== null
         }
 
         RowLayout {
@@ -212,7 +232,7 @@ T.Pane {
                     Layout.fillWidth: true
                     text: qsTr("Add file...")
                     iconTxt: VLCIcons.add
-                    onClicked: DialogsProvider.loadSubtitlesFile()
+                    onClicked: root.addSubtitlesRequested()
                 }
 
                 Widgets.ButtonExt {
@@ -223,7 +243,20 @@ T.Pane {
                 }
             }
 
+            SectionHeader { text: qsTr("Always choose") }
+
+            LanguageChips {
+                model: Player.subtitleTracks
+                current: SubtitleHelper.subtitleLanguage
+                onSelected: (language) => { SubtitleHelper.subtitleLanguage = language }
+            }
+
             SectionHeader { text: qsTr("Timing") }
+
+            SubtitleTimeline {
+                Layout.fillWidth: true
+                colorContext: theme
+            }
 
             DelayRow {
                 label: qsTr("Subtitle delay")
@@ -300,6 +333,14 @@ T.Pane {
                 text: qsTr("Add audio file...")
                 iconTxt: VLCIcons.add
                 onClicked: DialogsProvider.loadAudioFile()
+            }
+
+            SectionHeader { text: qsTr("Always choose") }
+
+            LanguageChips {
+                model: Player.audioTracks
+                current: SubtitleHelper.audioLanguage
+                onSelected: (language) => { SubtitleHelper.audioLanguage = language }
             }
 
             SectionHeader { text: qsTr("Timing") }
@@ -720,6 +761,144 @@ T.Pane {
             verticalAlignment: Text.AlignVCenter
             horizontalAlignment: Text.AlignHCenter
             color: chip.checked ? "white" : chipTheme.fg.primary
+        }
+    }
+
+    // "Always choose" a language for every following media, saved in the preferences
+    component LanguageChips: Flow {
+        id: languageChips
+
+        property var model
+        property string current
+        signal selected(string language)
+
+        readonly property var _languages: {
+            const languages = root._languagesOf(model, model ? model.count : 0)
+            if (current.length > 0 && !languages.includes(current))
+                languages.unshift(current)
+            return languages
+        }
+
+        Layout.fillWidth: true
+        spacing: VLCStyle.margin_xxsmall
+
+        Chip {
+            text: qsTr("Off")
+            checked: languageChips.current.length === 0
+            onClicked: languageChips.selected("")
+        }
+
+        Repeater {
+            model: languageChips._languages
+
+            delegate: Chip {
+                required property string modelData
+
+                text: SubtitleHelper.languageName(modelData)
+                checked: languageChips.current === modelData
+                onClicked: languageChips.selected(modelData)
+            }
+        }
+    }
+
+    // saved settings for a show: apply one, save the current settings, tie to the folder
+    component PresetBar: ColumnLayout {
+        id: presetBar
+
+        property bool _saving: false
+
+        spacing: VLCStyle.margin_xxsmall
+
+        RowLayout {
+            Layout.fillWidth: true
+
+            Widgets.CaptionLabel {
+                Layout.fillWidth: true
+                color: theme.fg.secondary
+                font.weight: Font.DemiBold
+                font.capitalization: Font.AllUppercase
+                text: qsTr("Presets")
+            }
+
+            Widgets.TextToolButton {
+                visible: root.presets && root.presets.activePreset.length > 0
+                text: qsTr("Delete")
+                onClicked: root.presets.remove(root.presets.activePreset)
+            }
+
+            Widgets.TextToolButton {
+                text: presetBar._saving ? qsTr("Cancel") : qsTr("Save current...")
+                onClicked: presetBar._saving = !presetBar._saving
+            }
+        }
+
+        Flow {
+            Layout.fillWidth: true
+            spacing: VLCStyle.margin_xxsmall
+
+            visible: !presetBar._saving
+
+            Widgets.CaptionLabel {
+                visible: !root.presets || root.presets.names.length === 0
+                color: theme.fg.secondary
+                text: qsTr("Save subtitle and audio settings for a show to bring them back in one click")
+                width: parent.width
+                wrapMode: Text.WordWrap
+            }
+
+            Repeater {
+                model: root.presets ? root.presets.names : []
+
+                delegate: Chip {
+                    required property string modelData
+
+                    text: modelData
+                    checked: root.presets.activePreset === modelData
+                    onClicked: root.presets.apply(modelData)
+                }
+            }
+        }
+
+        ColumnLayout {
+            Layout.fillWidth: true
+            visible: presetBar._saving
+
+            Widgets.TextFieldExt {
+                id: presetName
+
+                Layout.fillWidth: true
+                placeholderText: qsTr("Preset name, like the show name")
+                onAccepted: saveButton.clicked()
+            }
+
+            Widgets.CheckBoxExt {
+                id: tieToFolder
+
+                Layout.fillWidth: true
+                checked: true
+                text: qsTr("Use it for every video of this folder")
+            }
+
+            Widgets.ButtonExt {
+                id: saveButton
+
+                Layout.fillWidth: true
+                text: qsTr("Save preset")
+                enabled: presetName.text.trim().length > 0
+
+                onClicked: {
+                    root.presets.save(presetName.text, tieToFolder.checked)
+                    presetName.text = ""
+                    presetBar._saving = false
+                }
+            }
+        }
+
+        Rectangle {
+            Layout.fillWidth: true
+            Layout.topMargin: VLCStyle.margin_xxsmall
+            implicitHeight: VLCStyle.border
+            color: theme.border
         }
     }
 

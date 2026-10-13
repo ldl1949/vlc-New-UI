@@ -107,6 +107,13 @@ Widgets.IconToolButton {
                 root.menuOpened(null)
             }
 
+            onRequestAddSubtitles: {
+                if (typeof root._parentItem.openAddSubtitles === "function")
+                    root._parentItem.openAddSubtitles()
+                else
+                    DialogsProvider.loadSubtitlesFile()
+            }
+
             onRequestSidebar: (tab) => {
                 if (typeof root._parentItem.openSidebar === "function")
                     root._parentItem.openSidebar(tab)

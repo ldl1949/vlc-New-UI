@@ -123,6 +123,11 @@ FocusScope {
         sidebarVisible = true
     }
 
+    function openAddSubtitles() {
+        addSubtitlesLoader.active = true
+        addSubtitlesLoader.item.open()
+    }
+
     // y is in rootPlayer coordinates
     function _onVideoPointerMoved(y) {
         cursorAutoHideTimer.restart()
@@ -1258,6 +1263,10 @@ FocusScope {
         sourceComponent: PlayerSidebar {
             colorContext.palette: windowTheme.palette
 
+            presets: playerPresets
+
+            onAddSubtitlesRequested: rootPlayer.openAddSubtitles()
+
             currentTab: rootPlayer.sidebarTab
             onCurrentTabChanged: rootPlayer.sidebarTab = currentTab
 
@@ -1304,6 +1313,26 @@ FocusScope {
         Navigation.parentItem: rootPlayer
 
         onVisibleChanged: rootPlayer.lockUnlockAutoHide(visible)
+    }
+
+    PlayerPresets {
+        id: playerPresets
+    }
+
+    Loader {
+        id: addSubtitlesLoader
+
+        anchors.fill: parent
+        z: 20
+
+        active: false
+
+        sourceComponent: AddSubtitlesDialog {
+            colorContext.palette: windowTheme.palette
+
+            onOpened: rootPlayer.lockUnlockAutoHide(true)
+            onClosed: rootPlayer.lockUnlockAutoHide(false)
+        }
     }
 
     Timer {
