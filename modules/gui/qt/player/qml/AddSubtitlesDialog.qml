@@ -209,19 +209,75 @@ T.Popup {
                     color: theme.fg.primary
                 }
 
-                Widgets.ComboBoxExt {
+                // which subtitle file goes with this video, click to change it
+                Chip {
+                    id: choiceButton
+
                     Layout.fillWidth: true
                     Layout.preferredWidth: 1
-                    Layout.preferredHeight: VLCStyle.combobox_height_large
 
-                    model: matchList.choiceNames
-                    currentIndex: root.subtitleUrls.indexOf(matchRow.modelData.subtitleUrl) + 1
+                    readonly property int choiceIndex: root.subtitleUrls.indexOf(matchRow.modelData.subtitleUrl) + 1
 
-                    onActivated: (index) => {
-                        const list = root.matches.slice()
-                        list[matchRow.index] = Object.assign({}, list[matchRow.index],
-                            { subtitleUrl: index > 0 ? root.subtitleUrls[index - 1] : "" })
-                        root.matches = list
+                    text: matchList.choiceNames[choiceIndex] ?? ""
+                    checked: choiceIndex > 0
+
+                    onClicked: choicePopup.open()
+
+                    T.Popup {
+                        id: choicePopup
+
+                        y: choiceButton.height
+                        width: choiceButton.width
+                        height: Math.min(choiceList.contentHeight + topPadding + bottomPadding,
+                                         VLCStyle.dp(200, VLCStyle.scale))
+                        padding: VLCStyle.margin_xxxsmall
+
+                        background: Rectangle {
+                            color: popupTheme.bg.primary
+                            border.color: popupTheme.border
+                            border.width: VLCStyle.border
+                            radius: VLCStyle.button_radius
+                        }
+
+                        contentItem: ListView {
+                            id: choiceList
+
+                            clip: true
+                            boundsBehavior: Flickable.StopAtBounds
+                            model: matchList.choiceNames
+
+                            delegate: T.ItemDelegate {
+                                id: choiceDelegate
+
+                                required property int index
+                                required property string modelData
+
+                                width: choiceList.width
+                                implicitHeight: VLCStyle.dp(28, VLCStyle.scale)
+                                leftPadding: VLCStyle.margin_xsmall
+
+                                background: Rectangle {
+                                    color: choiceDelegate.hovered ? Qt.alpha(popupTheme.accent, 0.25) : "transparent"
+                                    radius: VLCStyle.button_radius
+                                }
+
+                                contentItem: Widgets.MenuLabel {
+                                    text: choiceDelegate.modelData
+                                    elide: Text.ElideMiddle
+                                    verticalAlignment: Text.AlignVCenter
+                                    color: popupTheme.fg.primary
+                                    font.weight: (choiceDelegate.index === choiceButton.choiceIndex) ? Font.DemiBold : Font.Normal
+                                }
+
+                                onClicked: {
+                                    const list = root.matches.slice()
+                                    list[matchRow.index] = Object.assign({}, list[matchRow.index],
+                                        { subtitleUrl: index > 0 ? root.subtitleUrls[index - 1] : "" })
+                                    root.matches = list
+                                    choicePopup.close()
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -278,6 +334,7 @@ T.Popup {
             id: chipText
 
             text: chip.text
+            elide: Text.ElideMiddle
             verticalAlignment: Text.AlignVCenter
             horizontalAlignment: Text.AlignHCenter
             color: chip.checked ? "white" : chipTheme.fg.primary
