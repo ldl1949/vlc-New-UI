@@ -166,7 +166,7 @@ QVariantList parseCues(const QString &content)
 
         QStringList text;
         while (i + 1 < lines.size() && !lines[i + 1].trimmed().isEmpty())
-            text << lines[++i].remove(markup).trimmed();
+            text << QString(lines[++i]).remove(markup).trimmed();
 
         QVariantMap cue;
         cue[QStringLiteral("start")] = toMs(m, 1);
