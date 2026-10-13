@@ -52,8 +52,11 @@ FocusScope {
     property bool libraryPanelVisible: false
     property int sidebarTab: PlayerSidebar.Tab.Subtitles
 
-    // only reveal the top and bottom bars when the pointer gets near them
-    property bool revealBarsNearEdgesOnly: true
+    // only reveal the top and bottom bars when the pointer gets near them (see settings)
+    property bool revealBarsNearEdgesOnly: {
+        const value = MainCtx.settingValue("Player/RevealNearEdges", true)
+        return value === true || value === "true"
+    }
 
     readonly property string coverSource: {
         if (Player.artwork &&

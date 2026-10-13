@@ -335,6 +335,31 @@ Item {
             source: "qrc:///qt/qml/VLC/Menus/GlobalShortcuts.qml"
         }
 
+        // redesigned settings, covering the window
+        Loader {
+            id: settingsLoader
+
+            anchors.fill: parent
+            z: 1000
+
+            active: false
+            focus: active
+
+            sourceComponent: SettingsPage {
+                onCloseRequested: settingsLoader.active = false
+            }
+
+            onLoaded: item.forceActiveFocus()
+
+            Connections {
+                target: DialogsProvider
+
+                function onSettingsPageRequested() {
+                    settingsLoader.active = !settingsLoader.active
+                }
+            }
+        }
+
         Loader {
             active: {
                 const windowVisibility = MainCtx.intfMainWindow.visibility

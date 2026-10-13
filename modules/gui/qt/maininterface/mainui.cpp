@@ -27,6 +27,7 @@
 #include "player/player_controller.hpp"
 #include "player/subtitle_helper.hpp"
 #include "player/folder_media.hpp"
+#include "util/config_helper.hpp"
 #include "player/player_controlbar_model.hpp"
 #include "player/control_list_model.hpp"
 #include "player/control_list_filter.hpp"
@@ -413,6 +414,7 @@ void MainUI::registerQMLTypes()
 
         // @uri VLC.Util
         qmlRegisterSingletonInstance<QmlKeyHelper>(uri, versionMajor, versionMinor, "KeyHelper", new QmlKeyHelper(this));
+        qmlRegisterSingletonInstance<ConfigHelper>(uri, versionMajor, versionMinor, "VLCConfig", new ConfigHelper(m_intf, this));
         qmlRegisterSingletonType<EffectsImageProvider>(uri, versionMajor, versionMinor, "Effects", EffectsImageProvider::instance);
         qmlRegisterUncreatableType<SVGColorImageBuilder>(uri, versionMajor, versionMinor, "SVGColorImageBuilder", "");
         qmlRegisterSingletonInstance<SVGColorImage>(uri, versionMajor, versionMinor, "SVGColorImage", new SVGColorImage(this));

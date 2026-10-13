@@ -215,7 +215,11 @@ public slots:
                                               const QMessageBox::StandardButtons buttons = QMessageBox::NoButton,
                                               const QMessageBox::StandardButton defaultButton = QMessageBox::NoButton,
                                               const QMessageBox::Icon icon = QMessageBox::NoIcon);
+    // the redesigned settings page when the main interface is shown, the complete
+    // preferences otherwise
     void prefsDialog();
+    void classicPrefsDialog();
+    void hotkeysDialog();
     void firstRunDialog();
     void extendedDialog();
     void synchroDialog();
@@ -286,6 +290,8 @@ public:
 #endif
 
 signals:
+    // asks the main interface to show its settings page
+    void settingsPageRequested();
     void releaseMouseEvents();
     void showToolbarEditorDialog();
 

@@ -148,6 +148,8 @@ libqt_plugin_la_SOURCES = \
 	dialogs/preferences/preferences.cpp \
 	dialogs/preferences/preferences.hpp \
 	dialogs/preferences/preferences_widgets.cpp \
+	dialogs/preferences/hotkeys_dialog.cpp \
+	dialogs/preferences/hotkeys_dialog.hpp \
 	dialogs/preferences/preferences_widgets.hpp \
 	dialogs/preferences/simple_preferences.cpp \
 	dialogs/preferences/simple_preferences.hpp \
@@ -333,6 +335,7 @@ libqt_plugin_la_SOURCES = \
 	util/flickable_scroll_handler.cpp \
 	util/flickable_scroll_handler.hpp \
 	util/qt_dirs.cpp util/qt_dirs.hpp \
+	util/config_helper.cpp util/config_helper.hpp \
 	util/proxycolumnmodel.hpp \
 	util/registry.cpp util/registry.hpp \
 	util/renderer_manager.cpp util/renderer_manager.hpp \
@@ -435,6 +438,8 @@ nodist_libqt_plugin_la_SOURCES = \
 	dialogs/preferences/expert_model.moc.cpp \
 	dialogs/preferences/expert_view.moc.cpp \
 	dialogs/preferences/preferences.moc.cpp \
+	dialogs/preferences/hotkeys_dialog.moc.cpp \
+	util/config_helper.moc.cpp \
 	dialogs/preferences/preferences_widgets.moc.cpp \
 	dialogs/preferences/simple_preferences.moc.cpp \
 	dialogs/sout/convert.moc.cpp \
@@ -1066,6 +1071,7 @@ libqml_module_maininterface_a_QML = \
 	maininterface/qml/MainViewLoader.qml \
 	maininterface/qml/MainDisplay.qml \
 	maininterface/qml/SideNavigationPane.qml \
+	maininterface/qml/SettingsPage.qml \
 	maininterface/qml/SideNavigationDelegate.qml \
 	maininterface/qml/NoMedialibHome.qml
 

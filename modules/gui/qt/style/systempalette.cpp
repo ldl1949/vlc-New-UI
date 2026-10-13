@@ -304,6 +304,18 @@ SystemPalette::SystemPalette(QObject* parent)
 
 void SystemPalette::componentComplete()
 {
+    loadAccentColor();
+    updatePalette();
+}
+
+void SystemPalette::reloadAccentColor()
+{
+    loadAccentColor();
+    updatePalette();
+}
+
+void SystemPalette::loadAccentColor()
+{
     {
         assert(m_ctx);
         char* accentColor = var_InheritString(m_ctx->getIntf(), "qt-accent-color");
@@ -311,7 +323,8 @@ void SystemPalette::componentComplete()
 
         if (!strcmp(accentColor, "default"))
         {
-            // Use default
+            orange500 = QColor("#FF8800");
+            orange800 = QColor("#FF610A");
         }
 #if QT_VERSION >= QT_VERSION_CHECK(6, 6, 0)
         else if (!strcmp(accentColor, "system"))
@@ -331,8 +344,6 @@ void SystemPalette::componentComplete()
 
         free(accentColor);
     }
-
-    updatePalette();
 }
 
 ColorSchemeModel::ColorScheme SystemPalette::source() const

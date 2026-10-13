@@ -42,6 +42,7 @@
 /* The dialogs */
 #include "dialogs/bookmarks/bookmarks.hpp"
 #include "dialogs/preferences/preferences.hpp"
+#include "dialogs/preferences/hotkeys_dialog.hpp"
 #include "dialogs/mediainfo/mediainfo.hpp"
 #include "dialogs/messages/messages.hpp"
 #include "dialogs/extended/extended.hpp"
@@ -288,6 +289,23 @@ const QEvent::Type DialogEvent::DialogEvent_Type =
         (QEvent::Type)QEvent::registerEventType();
 
 void DialogsProvider::prefsDialog()
+{
+    if (p_intf->p_mi && !p_intf->b_isDialogProvider)
+    {
+        emit settingsPageRequested();
+        return;
+    }
+    classicPrefsDialog();
+}
+
+void DialogsProvider::hotkeysDialog()
+{
+    auto dialog = new HotkeysDialog(p_intf);
+    dialog->setAttribute(Qt::WA_DeleteOnClose);
+    dialog->show();
+}
+
+void DialogsProvider::classicPrefsDialog()
 {
     if (Q_LIKELY(!m_prefsDialog))
     {

@@ -157,6 +157,9 @@ public slots:
     void setSource(ColorSchemeModel::ColorScheme source);
     void setCtx(MainCtx* ctx);
 
+    /// applies a new "qt-accent-color" without restarting
+    void reloadAccentColor();
+
 
 signals:
     void sourceChanged();
@@ -167,6 +170,7 @@ signals:
 
 private:
     void updatePalette();
+    void loadAccentColor();
 
     void makeLightPalette();
     void makeDarkPalette();
