@@ -400,7 +400,8 @@ FocusScope{
         anchors.top: logoOrResume.bottom
         anchors.leftMargin: root._sideMargin
 
-        width: root.textWidth - VLCStyle.margin_normal
+        // only as wide as the text, so that it is clickable on the text only
+        width: Math.min(implicitWidth, root.textWidth - VLCStyle.margin_normal)
 
         visible: !root.pinControls
 
@@ -430,6 +431,8 @@ FocusScope{
         }
 
         Widgets.ToolTipExt {
+            colorContext.palette: theme.palette
+
             visible: titleHover.hovered
             delay: VLCStyle.delayToolTipAppear
             text: qsTr("Open in library")
