@@ -41,6 +41,7 @@
 #include <vlc_spu.h>
 #include <vlc_executor.h>
 #include <vlc_vout_osd.h>
+#include <vlc_subpicture.h>
 #include "math.h"
 #include <stdatomic.h>
 
