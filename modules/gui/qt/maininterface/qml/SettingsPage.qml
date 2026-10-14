@@ -18,6 +18,7 @@
 import QtQuick
 import QtQuick.Templates as T
 import QtQuick.Layouts
+import QtQuick.Window
 
 import VLC.MainInterface
 import VLC.Style
@@ -87,9 +88,46 @@ FocusScope {
         onWheel: (wheel) => wheel.accepted = true
     }
 
+    readonly property bool _showCSD: MainCtx.clientSideDecoration
+                                     && (MainCtx.intfMainWindow.visibility !== Window.FullScreen)
+
+    // the page covers the window: keep the window buttons and the title bar drag
+    Item {
+        id: titleStrip
+
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.right: parent.right
+
+        height: root._showCSD ? VLCStyle.globalToolbar_height : 0
+        z: 1
+
+        Loader {
+            anchors.fill: parent
+            active: root._showCSD
+            source: "qrc:///qt/qml/VLC/Widgets/CSDTitlebarTapNDrapHandler.qml"
+        }
+
+        Loader {
+            anchors.top: parent.top
+            anchors.right: parent.right
+            anchors.bottom: parent.bottom
+
+            focus: false
+            active: root._showCSD
+            visible: root._showCSD
+            source: VLCStyle.palette.hasCSDImage
+                    ? "qrc:///qt/qml/VLC/Widgets/CSDThemeButtonSet.qml"
+                    : "qrc:///qt/qml/VLC/Widgets/CSDWindowButtonSet.qml"
+        }
+    }
+
     RowLayout {
-        anchors.fill: parent
-        anchors.topMargin: VLCStyle.applicationVerticalMargin + VLCStyle.margin_normal
+        anchors.top: titleStrip.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        anchors.topMargin: VLCStyle.applicationVerticalMargin + VLCStyle.margin_xsmall
         anchors.leftMargin: VLCStyle.applicationHorizontalMargin + VLCStyle.margin_normal
         anchors.rightMargin: VLCStyle.applicationHorizontalMargin
         spacing: VLCStyle.margin_large
