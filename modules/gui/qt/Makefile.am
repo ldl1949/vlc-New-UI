@@ -1072,6 +1072,7 @@ libqml_module_maininterface_a_QML = \
 	maininterface/qml/MainDisplay.qml \
 	maininterface/qml/SideNavigationPane.qml \
 	maininterface/qml/SettingsPage.qml \
+	maininterface/qml/OnboardingScreen.qml \
 	maininterface/qml/SideNavigationDelegate.qml \
 	maininterface/qml/NoMedialibHome.qml
 

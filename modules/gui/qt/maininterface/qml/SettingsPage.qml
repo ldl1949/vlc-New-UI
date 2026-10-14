@@ -35,6 +35,7 @@ FocusScope {
     id: root
 
     signal closeRequested()
+    signal showWelcomeRequested()
 
     property string currentCategory: "general"
     property string searchText: ""
@@ -306,6 +307,14 @@ FocusScope {
         Settings {
             ThemeRow {}
             AccentColorRow {}
+            CustomRow {
+                label: qsTr("Welcome screen")
+                help: qsTr("The screen shown on the first start, to choose the look, the player controls and to learn the main shortcuts.")
+                Widgets.ButtonExt {
+                    text: qsTr("Show again")
+                    onClicked: root.showWelcomeRequested()
+                }
+            }
             Setting { option: "one-instance" }
             Setting { option: "playlist-enqueue" }
             Setting { option: "qt-updates-notif" }
@@ -321,6 +330,38 @@ FocusScope {
         id: interfaceSettings
 
         Settings {
+            CustomRow {
+                label: qsTr("Player controls layout")
+                help: qsTr("The buttons of the player and where they are. Every layout can be changed by dragging buttons around.")
+                Flow {
+                    width: VLCStyle.dp(380, VLCStyle.scale)
+                    spacing: VLCStyle.margin_xxsmall
+                    layoutDirection: Qt.RightToLeft
+
+                    Repeater {
+                        model: MainCtx.controlbarProfileModel.count
+
+                        delegate: Chip {
+                            required property int index
+
+                            text: MainCtx.controlbarProfileModel.getProfile(index)?.name ?? ""
+                            checked: MainCtx.controlbarProfileModel.selectedProfile === index
+                            onClicked: {
+                                MainCtx.controlbarProfileModel.selectedProfile = index
+                                MainCtx.controlbarProfileModel.save()
+                            }
+                        }
+                    }
+                }
+            }
+            CustomRow {
+                label: qsTr("Customize the player controls")
+                help: qsTr("Drag buttons into the player controls, out of them, or around, and save layouts of your own.")
+                Widgets.ButtonExt {
+                    text: qsTr("Customize...")
+                    onClicked: DialogsProvider.showToolbarEditorDialog()
+                }
+            }
             Setting { option: "qt-pin-controls"; label: qsTr("Show the controls under the video, not over it") }
             CustomRow {
                 label: qsTr("Show the bars only when the pointer is near them")

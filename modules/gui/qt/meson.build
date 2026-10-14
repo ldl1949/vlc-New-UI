@@ -656,6 +656,7 @@ qml_modules += {
         qml_maininterface_extra_files,
         'maininterface/qml/SideNavigationPane.qml',
         'maininterface/qml/SettingsPage.qml',
+        'maininterface/qml/OnboardingScreen.qml',
         'maininterface/qml/SideNavigationDelegate.qml',
     ),
 }

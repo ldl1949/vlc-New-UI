@@ -347,6 +347,11 @@ Item {
 
             sourceComponent: SettingsPage {
                 onCloseRequested: settingsLoader.active = false
+
+                onShowWelcomeRequested: {
+                    settingsLoader.active = false
+                    onboardingLoader.active = true
+                }
             }
 
             onLoaded: item.forceActiveFocus()
@@ -358,6 +363,29 @@ Item {
                     settingsLoader.active = !settingsLoader.active
                 }
             }
+        }
+
+        // welcome screen, on the first start only
+        Loader {
+            id: onboardingLoader
+
+            anchors.fill: parent
+            z: 1001
+
+            active: {
+                const done = MainCtx.settingValue("Onboarding/Done", false)
+                return !(done === true || done === "true")
+            }
+            focus: active
+
+            sourceComponent: OnboardingScreen {
+                onFinished: {
+                    MainCtx.setSettingValue("Onboarding/Done", true)
+                    onboardingLoader.active = false
+                }
+            }
+
+            onLoaded: item.forceActiveFocus()
         }
 
         Loader {
