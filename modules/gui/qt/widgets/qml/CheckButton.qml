@@ -70,14 +70,10 @@ T.Switch {
 
     // Events
 
-    onWidthChanged: {
-        animation.stop()
+    onWidthChanged: _placeHandle()
 
-        if (checked)
-            handle.x = handle.drag.maximumX
-        else
-            handle.x = 0
-    }
+    // when `checked` is bound at creation, the handle range is not known yet
+    Component.onCompleted: Qt.callLater(_placeHandle)
 
     onCheckedChanged: {
         if (_update === false)
@@ -97,6 +93,15 @@ T.Switch {
     // Functions
 
     // Private
+
+    function _placeHandle() {
+        animation.stop()
+
+        if (checked)
+            handle.x = handle.drag.maximumX
+        else
+            handle.x = 0
+    }
 
     function _applyX(x) {
         const from = handle.x
