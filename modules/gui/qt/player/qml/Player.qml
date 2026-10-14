@@ -138,6 +138,27 @@ FocusScope {
         addSubtitlesLoader.item.open()
     }
 
+    // closes the most transient thing open, returns whether something was closed
+    function _dismissTransientUi() {
+        if (controlBar.menu) {
+            controlBar.dismiss()
+            return true
+        }
+        if (addSubtitlesLoader.item?.opened) {
+            addSubtitlesLoader.item.close()
+            return true
+        }
+        if (sidebarVisible) {
+            sidebarVisible = false
+            return true
+        }
+        if (libraryPanelVisible) {
+            libraryPanelVisible = false
+            return true
+        }
+        return false
+    }
+
     // y is in rootPlayer coordinates
     function _onVideoPointerMoved(y) {
         cursorAutoHideTimer.restart()
@@ -1592,6 +1613,13 @@ FocusScope {
     target: MainCtx.intfMainWindow
 
         Keys.onPressed: (event) => {
+            // Escape closes what is open (popup, panel) before being a hotkey.
+            // Popups are separate windows, the focus stays in the player.
+            if (event.key === Qt.Key_Escape && rootPlayer._dismissTransientUi()) {
+                event.accepted = true
+                return
+            }
+
             if (Player.isInteractive)
                 interactiveAutoHideTimer.restart()
             else

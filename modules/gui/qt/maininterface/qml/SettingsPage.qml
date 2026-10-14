@@ -58,7 +58,15 @@ FocusScope {
 
     focus: true
 
-    Keys.onEscapePressed: root.closeRequested()
+    // the choice list open, if any: Escape closes it before the page
+    property var _openPopup: null
+
+    Keys.onEscapePressed: {
+        if (root._openPopup)
+            root._openPopup.close()
+        else
+            root.closeRequested()
+    }
 
     readonly property ColorContext colorContext: ColorContext {
         id: theme
@@ -1002,6 +1010,14 @@ FocusScope {
 
         T.Popup {
             id: choicePopup
+
+            // a click outside closes the list without reaching what is below
+            modal: true
+            dim: false
+            closePolicy: T.Popup.CloseOnEscape | T.Popup.CloseOnPressOutside
+
+            onOpened: root._openPopup = choicePopup
+            onClosed: if (root._openPopup === choicePopup) root._openPopup = null
 
             y: choiceButton.height
             width: choiceButton.width

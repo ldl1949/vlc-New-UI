@@ -54,6 +54,11 @@ T.Popup {
 
     focus: true
 
+    // the click closing the popup must not reach the video (play/pause)
+    modal: true
+    dim: false
+    closePolicy: T.Popup.CloseOnEscape | T.Popup.CloseOnPressOutside
+
     readonly property ColorContext colorContext: ColorContext {
         id: popupTheme
         colorSet: ColorContext.Window
