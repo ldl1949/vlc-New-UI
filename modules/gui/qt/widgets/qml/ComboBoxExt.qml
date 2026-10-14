@@ -116,7 +116,8 @@ T.ComboBox {
                 color: theme.bg.secondary
             }
 
-            ScrollIndicator.vertical: ScrollIndicator { }
+            // QtQuick.Controls is not available, use our scroll bar
+            T.ScrollBar.vertical: Widgets.ScrollBarExt { }
         }
 
         background: Rectangle {

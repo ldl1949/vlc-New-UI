@@ -89,9 +89,26 @@ FocusScope {
         }
     }
 
+    // scrolls when the window is too small for the content
+    Flickable {
+        id: flickable
+
+        anchors.top: titleStrip.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+
+        contentWidth: width
+        contentHeight: Math.max(height, content.implicitHeight + VLCStyle.margin_large * 2)
+        clip: true
+        boundsBehavior: Flickable.StopAtBounds
+
     ColumnLayout {
-        anchors.centerIn: parent
-        width: Math.min(parent.width - VLCStyle.margin_xlarge * 2, VLCStyle.dp(620, VLCStyle.scale))
+        id: content
+
+        x: (flickable.width - width) / 2
+        y: Math.max(VLCStyle.margin_large, (flickable.height - implicitHeight) / 2)
+        width: Math.min(flickable.width - VLCStyle.margin_xlarge * 2, VLCStyle.dp(620, VLCStyle.scale))
         spacing: VLCStyle.margin_large
 
         Image {
@@ -126,7 +143,7 @@ FocusScope {
         // pages
         StackLayout {
             Layout.fillWidth: true
-            Layout.preferredHeight: VLCStyle.dp(220, VLCStyle.scale)
+            Layout.preferredHeight: VLCStyle.dp(200, VLCStyle.scale)
             currentIndex: root.page
 
             // 0: look
@@ -343,6 +360,7 @@ FocusScope {
                 }
             }
         }
+    }
     }
 
     component Chip: T.AbstractButton {
