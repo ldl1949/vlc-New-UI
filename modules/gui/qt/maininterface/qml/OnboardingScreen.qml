@@ -136,7 +136,7 @@ FocusScope {
                 qsTr("Pick how VLC looks. You can change it any time in the settings."),
                 qsTr("Choose a layout for the buttons of the player. Every button can be moved later."),
                 qsTr("Most people control VLC with the keyboard. These are the shortcuts used the most."),
-                qsTr("Click the title of a video to find its other episodes, and the settings button next to the volume for subtitles, audio and speed.")
+                qsTr("While watching, the button next to the cone lists the other episodes, and the gear at the bottom right holds subtitles, audio and speed.")
             ][root.page]
         }
 
