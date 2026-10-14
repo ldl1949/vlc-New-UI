@@ -95,8 +95,14 @@ T.ComboBox {
         radius: VLCStyle.dp(2, VLCStyle.scale)
     }
 
-    popup: Popup {
+    // QtQuick.Controls is not available: the template has no implicit size
+    popup: T.Popup {
         y: control.height - 1
+
+        implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
+                                implicitContentWidth + leftPadding + rightPadding)
+        implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
+                                 implicitContentHeight + topPadding + bottomPadding)
 
         // NOTE: This Popup should be on top of other Popup(s) most of the time.
         z: 100
