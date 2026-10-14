@@ -461,6 +461,7 @@ FocusScope {
             Setting {
                 option: "sub-autodetect-fuzzy"
                 label: qsTr("Load subtitle files of the folder")
+                help: qsTr("Which subtitle files found next to the video are loaded automatically.")
                 choices: [
                     { value: 0, text: qsTr("Never") },
                     { value: 1, text: qsTr("Any subtitle file") },
@@ -709,6 +710,7 @@ FocusScope {
 
         required property string option
         property string label: ""
+        property string help: ""
         property var choices: null
 
         property var _info: VLCConfig.describe(option)
@@ -742,7 +744,7 @@ FocusScope {
         }
 
         InfoButton {
-            help: setting._info.help ?? ""
+            help: setting.help.length > 0 ? setting.help : (setting._info.help ?? "")
         }
 
         Widgets.TextToolButton {
@@ -774,6 +776,10 @@ FocusScope {
             id: boolControl
 
             Widgets.CheckButton {
+                // CheckButton only sets its width, the Loader needs the implicit size
+                implicitWidth: VLCStyle.checkButton_width
+                implicitHeight: VLCStyle.checkButton_height
+
                 checked: setting._info.value
                 onToggled: setting.set(checked)
             }
