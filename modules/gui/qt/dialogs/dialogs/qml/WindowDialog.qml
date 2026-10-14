@@ -19,6 +19,7 @@
 import QtQuick
 import QtQuick.Window
 import QtQuick.Layouts
+import QtQuick.Templates as T
 
 import VLC.MainInterface
 import VLC.Widgets as Widgets
@@ -94,18 +95,37 @@ Window {
             sourceComponent: contentComponent
         }
 
-        DialogButtonBox {
+        // QtQuick.Controls is not available: use the template, with its content item
+        T.DialogButtonBox {
             id: buttonBox
 
             padding: 0
             spacing: VLCStyle.margin_small
 
+            implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
+                                    implicitContentWidth + leftPadding + rightPadding)
+            implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
+                                     implicitContentHeight + topPadding + bottomPadding)
+
             Layout.fillWidth: true
             Layout.minimumHeight: VLCStyle.icon_normal
 
-            standardButtons: DialogButtonBox.Ok | DialogButtonBox.Cancel
+            alignment: Qt.AlignRight
+
+            standardButtons: T.DialogButtonBox.Ok | T.DialogButtonBox.Cancel
 
             background: null
+
+            contentItem: ListView {
+                implicitWidth: contentWidth
+                implicitHeight: contentItem.childrenRect.height
+
+                model: buttonBox.contentModel
+                spacing: buttonBox.spacing
+                orientation: ListView.Horizontal
+                boundsBehavior: Flickable.StopAtBounds
+                interactive: false
+            }
 
             onAccepted: root.accepted()
             onRejected: root.rejected(true)

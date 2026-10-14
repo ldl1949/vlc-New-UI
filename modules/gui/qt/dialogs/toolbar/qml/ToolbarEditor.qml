@@ -17,6 +17,7 @@
  *****************************************************************************/
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Templates as T
 import QtQml.Models
 
 
@@ -47,9 +48,27 @@ Item {
         anchors.fill: parent
         spacing: 0
 
-        TabBar {
+        // QtQuick.Controls is not available: the template needs its content item
+        T.TabBar {
             id: bar
             z: 1
+
+            implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
+                                    contentWidth + leftPadding + rightPadding)
+            implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
+                                     contentHeight + topPadding + bottomPadding)
+
+            contentItem: ListView {
+                model: bar.contentModel
+                currentIndex: bar.currentIndex
+
+                spacing: bar.spacing
+                orientation: ListView.Horizontal
+                boundsBehavior: Flickable.StopAtBounds
+                flickableDirection: Flickable.AutoFlickIfNeeded
+                snapMode: ListView.SnapToItem
+                highlightMoveDuration: 0
+            }
 
             background: Rectangle {
                 color: theme.bg.primary
